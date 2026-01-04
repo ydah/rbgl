@@ -1,0 +1,126 @@
+# frozen_string_literal: true
+
+require_relative "connection"
+
+module RBGL
+  module GUI
+    module Wayland
+      class Backend < GUI::Backend
+        def initialize(width, height, title = "RBGL")
+          super
+          @connection = Connection.new
+          @windows = {}
+          setup_window(width, height, title)
+        end
+
+        private def setup_window(w, h, t)
+          surface = @connection.compositor.create_surface
+          xdg_surface = @connection.xdg_wm_base.get_xdg_surface(surface)
+          toplevel = xdg_surface.get_toplevel
+          toplevel.set_title(t)
+
+          shm_buffer = create_shm_buffer(w, h)
+
+          surface.attach(shm_buffer, 0, 0)
+          surface.commit
+          @connection.flush
+
+          handle = surface.id
+          @windows[handle] = {
+            surface: surface,
+            xdg_surface: xdg_surface,
+            toplevel: toplevel,
+            shm_buffer: shm_buffer,
+            width: w,
+            height: h,
+            should_close: false,
+            pending_events: []
+          }
+
+          @handle = handle
+        end
+
+        def present(framebuffer)
+          return unless @handle
+
+          window = @windows[@handle]
+          return unless window
+
+          buffer = convert_to_wayland_format(framebuffer)
+          window[:shm_buffer].write(buffer)
+
+          window[:surface].damage(0, 0, framebuffer.width, framebuffer.height)
+          window[:surface].attach(window[:shm_buffer], 0, 0)
+          window[:surface].commit
+          @connection.flush
+        end
+
+        def poll_events
+          events = []
+          @connection.dispatch_pending
+
+          if @handle && @windows[@handle]
+            events.concat(@windows[@handle][:pending_events])
+            @windows[@handle][:pending_events] = []
+          end
+
+          events
+        end
+
+        def should_close?
+          return false unless @handle
+
+          @windows[@handle]&.[](:should_close) || false
+        end
+
+        def close
+          return unless @handle
+
+          window = @windows[@handle]
+          return unless window
+
+          window[:should_close] = true
+          window[:toplevel].destroy
+          window[:xdg_surface].destroy
+          window[:surface].destroy
+          window[:shm_buffer].destroy
+          @windows.delete(@handle)
+        end
+
+        private
+
+        def convert_to_wayland_format(framebuffer)
+          framebuffer.to_bgra_bytes
+        end
+
+        def create_shm_buffer(width, height)
+          size = width * height * 4
+
+          fd = create_anonymous_file(size)
+
+          pool = @connection.shm.create_pool(fd, size)
+          buffer = pool.create_buffer(0, width, height, width * 4, :argb8888)
+
+          ShmBuffer.new(fd, size, buffer)
+        end
+
+        def create_anonymous_file(size)
+          name = "rbgl-#{Process.pid}-#{rand(10000)}"
+          path = "/dev/shm/#{name}"
+
+          file = File.open(path, File::RDWR | File::CREAT | File::EXCL, 0o600)
+          file.truncate(size)
+          fd = file.fileno
+          File.unlink(path)
+
+          fd
+        rescue Errno::ENOENT
+          require "tempfile"
+          tmpfile = Tempfile.new("rbgl")
+          tmpfile.truncate(size)
+          tmpfile.fileno
+        end
+      end
+    end
+  end
+end

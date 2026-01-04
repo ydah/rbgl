@@ -1,0 +1,156 @@
+# frozen_string_literal: true
+
+require_relative "connection"
+
+module RBGL
+  module GUI
+    module X11
+      class Backend < GUI::Backend
+        def initialize(width, height, title = "RBGL")
+          super
+          @display = Connection.new(ENV["DISPLAY"] || ":0")
+          @windows = {}
+          setup_window(width, height, title)
+        end
+
+        private def setup_window(w, h, t)
+          wid = @display.generate_id
+
+          @display.create_window(
+            depth: @display.root_depth,
+            wid: wid,
+            parent: @display.root,
+            x: 0, y: 0,
+            width: w, height: h,
+            border_width: 0,
+            window_class: :input_output,
+            visual: @display.root_visual,
+            value_mask: [:back_pixel, :event_mask],
+            values: {
+              back_pixel: @display.black_pixel,
+              event_mask: [:exposure, :key_press, :key_release,
+                           :button_press, :button_release, :pointer_motion,
+                           :structure_notify]
+            }
+          )
+
+          @display.change_property(wid, :wm_name, :string, t)
+          @display.map_window(wid)
+          @display.flush
+
+          gc_id = @display.generate_id
+          @display.create_gc(gc_id, wid)
+
+          @windows[wid] = {
+            width: w,
+            height: h,
+            gc: gc_id,
+            should_close: false
+          }
+
+          @handle = wid
+        end
+
+        def present(framebuffer)
+          return unless @handle
+
+          window = @windows[@handle]
+          return unless window
+
+          buffer = convert_to_x11_format(framebuffer)
+
+          @display.put_image(
+            format: :z_pixmap,
+            drawable: @handle,
+            gc: window[:gc],
+            width: framebuffer.width,
+            height: framebuffer.height,
+            dst_x: 0, dst_y: 0,
+            depth: @display.root_depth,
+            data: buffer
+          )
+
+          @display.flush
+        end
+
+        def poll_events
+          events = []
+
+          while @display.pending > 0
+            raw_event = @display.next_event
+            next unless raw_event
+
+            event = convert_event(raw_event)
+            if event
+              events << event
+              emit_from_event(event)
+            end
+          end
+
+          events
+        end
+
+        def should_close?
+          return false unless @handle
+
+          @windows[@handle]&.[](:should_close) || false
+        end
+
+        def close
+          return unless @handle
+
+          @windows[@handle][:should_close] = true
+          @display.destroy_window(@handle)
+          @windows.delete(@handle)
+        end
+
+        private
+
+        def convert_to_x11_format(framebuffer)
+          # X11 uses BGRX format (blue, green, red, padding)
+          framebuffer.to_bgra_bytes
+        end
+
+        def convert_event(raw)
+          case raw[:type]
+          when :key_press
+            Event.new(:key_press, key: raw[:keycode])
+          when :key_release
+            Event.new(:key_release, key: raw[:keycode])
+          when :button_press
+            Event.new(:mouse_press, x: raw[:x], y: raw[:y], button: raw[:button])
+          when :button_release
+            Event.new(:mouse_release, x: raw[:x], y: raw[:y], button: raw[:button])
+          when :motion_notify
+            Event.new(:mouse_move, x: raw[:x], y: raw[:y])
+          when :configure_notify
+            Event.new(:resize, width: raw[:width], height: raw[:height])
+          when :client_message
+            if @handle && @windows[@handle]
+              @windows[@handle][:should_close] = true
+            end
+            Event.new(:close)
+          else
+            nil
+          end
+        end
+
+        def emit_from_event(event)
+          case event.type
+          when :key_press, :key_release
+            emit_key(event.key, event.type == :key_press ? :press : :release)
+          when :mouse_press, :mouse_release, :mouse_move
+            action = case event.type
+                     when :mouse_press then :press
+                     when :mouse_release then :release
+                     else :move
+                     end
+            emit_mouse(event.x, event.y, event[:button], action)
+          when :resize
+            emit_resize(event.width, event.height)
+          end
+        end
+      end
+    end
+  end
+end
