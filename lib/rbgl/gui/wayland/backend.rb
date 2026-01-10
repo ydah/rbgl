@@ -1,43 +1,16 @@
 # frozen_string_literal: true
 
-require_relative "connection"
+require_relative 'connection'
 
 module RBGL
   module GUI
     module Wayland
       class Backend < GUI::Backend
-        def initialize(width, height, title = "RBGL")
+        def initialize(width, height, title = 'RBGL')
           super
           @connection = Connection.new
           @windows = {}
           setup_window(width, height, title)
-        end
-
-        private def setup_window(w, h, t)
-          surface = @connection.compositor.create_surface
-          xdg_surface = @connection.xdg_wm_base.get_xdg_surface(surface)
-          toplevel = xdg_surface.get_toplevel
-          toplevel.set_title(t)
-
-          shm_buffer = create_shm_buffer(w, h)
-
-          surface.attach(shm_buffer, 0, 0)
-          surface.commit
-          @connection.flush
-
-          handle = surface.id
-          @windows[handle] = {
-            surface: surface,
-            xdg_surface: xdg_surface,
-            toplevel: toplevel,
-            shm_buffer: shm_buffer,
-            width: w,
-            height: h,
-            should_close: false,
-            pending_events: []
-          }
-
-          @handle = handle
         end
 
         def present(framebuffer)
@@ -89,6 +62,33 @@ module RBGL
 
         private
 
+        def setup_window(w, h, t)
+          surface = @connection.compositor.create_surface
+          xdg_surface = @connection.xdg_wm_base.get_xdg_surface(surface)
+          toplevel = xdg_surface.get_toplevel
+          toplevel.set_title(t)
+
+          shm_buffer = create_shm_buffer(w, h)
+
+          surface.attach(shm_buffer, 0, 0)
+          surface.commit
+          @connection.flush
+
+          handle = surface.id
+          @windows[handle] = {
+            surface: surface,
+            xdg_surface: xdg_surface,
+            toplevel: toplevel,
+            shm_buffer: shm_buffer,
+            width: w,
+            height: h,
+            should_close: false,
+            pending_events: []
+          }
+
+          @handle = handle
+        end
+
         def convert_to_wayland_format(framebuffer)
           framebuffer.to_bgra_bytes
         end
@@ -105,7 +105,7 @@ module RBGL
         end
 
         def create_anonymous_file(size)
-          name = "rbgl-#{Process.pid}-#{rand(10000)}"
+          name = "rbgl-#{Process.pid}-#{rand(10_000)}"
           path = "/dev/shm/#{name}"
 
           file = File.open(path, File::RDWR | File::CREAT | File::EXCL, 0o600)
@@ -115,8 +115,8 @@ module RBGL
 
           fd
         rescue Errno::ENOENT
-          require "tempfile"
-          tmpfile = Tempfile.new("rbgl")
+          require 'tempfile'
+          tmpfile = Tempfile.new('rbgl')
           tmpfile.truncate(size)
           tmpfile.fileno
         end

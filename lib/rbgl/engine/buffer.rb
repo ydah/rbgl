@@ -15,10 +15,10 @@ module RBGL
     class VertexLayout
       attr_reader :attributes, :stride
 
-      def initialize(&block)
+      def initialize(&)
         @attributes = {}
         @offset = 0
-        instance_eval(&block) if block_given?
+        instance_eval(&) if block_given?
         @stride = @offset
       end
 
@@ -67,17 +67,17 @@ module RBGL
 
       def add_vertex(**attributes)
         vertex_data = []
-        @layout.attributes.each do |name, attr|
+        @layout.attributes.each_key do |name|
           value = attributes[name]
           raise "Missing attribute: #{name}" unless value
 
           case value
           when Larb::Vec2
-            vertex_data.concat([value.x, value.y])
+            vertex_data.push(value.x, value.y)
           when Larb::Vec3
-            vertex_data.concat([value.x, value.y, value.z])
+            vertex_data.push(value.x, value.y, value.z)
           when Larb::Vec4
-            vertex_data.concat([value.x, value.y, value.z, value.w])
+            vertex_data.push(value.x, value.y, value.z, value.w)
           when Larb::Color
             vertex_data.concat(value.to_a)
           when Array
@@ -97,7 +97,7 @@ module RBGL
       end
 
       def get_vertex(index)
-        return nil if index < 0 || index >= @vertex_count
+        return nil if index.negative? || index >= @vertex_count
 
         start = index * @layout.stride
         vertex = {}

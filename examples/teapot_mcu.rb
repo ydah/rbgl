@@ -6,10 +6,10 @@
 # License: Creative Commons Attribution-NonCommercial-ShareAlike 3.0
 # https://creativecommons.org/licenses/by-nc-sa/3.0/deed.en
 
-$LOAD_PATH.unshift File.expand_path("../lib", __dir__)
+$LOAD_PATH.unshift File.expand_path('../lib', __dir__)
 
-require "rbgl"
-require "rlsl"
+require 'rbgl'
+require 'rlsl'
 
 WIDTH = 640
 HEIGHT = 480
@@ -284,22 +284,22 @@ shader = RLSL.define_metal(:teapot_metal) do
 end
 
 # Initialize display
-window = RBGL::GUI::Window.new(width: WIDTH, height: HEIGHT, title: "Teapot Metal (GPU)")
+window = RBGL::GUI::Window.new(width: WIDTH, height: HEIGHT, title: 'Teapot Metal (GPU)')
 
-puts "Teapot Metal - GPU Compute Shader"
-puts "Original: https://www.shadertoy.com/view/MdKcDw"
-puts "License: Creative Commons Attribution-NonCommercial-ShareAlike 3.0"
-puts "https://creativecommons.org/licenses/by-nc-sa/3.0/deed.en"
-puts "Move mouse to rotate camera"
+puts 'Teapot Metal - GPU Compute Shader'
+puts 'Original: https://www.shadertoy.com/view/MdKcDw'
+puts 'License: Creative Commons Attribution-NonCommercial-ShareAlike 3.0'
+puts 'https://creativecommons.org/licenses/by-nc-sa/3.0/deed.en'
+puts 'Move mouse to rotate camera'
 puts "Press 'q' or Escape to quit"
 
 # Check Metal availability
 unless window.metal_available?
-  puts "Metal compute is NOT available"
+  puts 'Metal compute is NOT available'
   exit 1
 end
 
-puts "Metal compute is available!"
+puts 'Metal compute is available!'
 
 start_time = Time.now
 frame_count = 0
@@ -313,7 +313,7 @@ while running && !window.should_close?
 
   begin
     shader.render_metal(window.native_handle, WIDTH, HEIGHT, { time: time, mouse: [mouse_x, mouse_y] })
-  rescue => e
+  rescue StandardError => e
     puts "Error: #{e.message}"
     puts e.backtrace.first(10).join("\n")
     running = false
@@ -324,7 +324,7 @@ while running && !window.should_close?
   events.each do |e|
     case e[:type]
     when :key_press
-      running = false if e[:key] == 12 || e[:key] == "q"
+      running = false if [12, 'q'].include?(e[:key])
     when :mouse_move
       mouse_x = e[:x].to_f
       mouse_y = e[:y].to_f
@@ -333,12 +333,12 @@ while running && !window.should_close?
 
   frame_count += 1
   now = Time.now
-  if now - last_fps_time >= 1.0
-    fps = frame_count / (now - last_fps_time)
-    puts "FPS: #{fps.round(1)}"
-    frame_count = 0
-    last_fps_time = now
-  end
+  next unless now - last_fps_time >= 1.0
+
+  fps = frame_count / (now - last_fps_time)
+  puts "FPS: #{fps.round(1)}"
+  frame_count = 0
+  last_fps_time = now
 end
 
 window.close

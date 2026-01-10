@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require_relative "../../test_helper"
-require "tmpdir"
+require_relative '../../test_helper'
+require 'tmpdir'
 
 class WindowTest < Test::Unit::TestCase
   setup do
@@ -12,11 +12,11 @@ class WindowTest < Test::Unit::TestCase
     FileUtils.rm_rf(@tmpdir)
   end
 
-  test "initializes with file backend" do
+  test 'initializes with file backend' do
     window = RBGL::GUI::Window.new(
       width: 100,
       height: 100,
-      title: "Test",
+      title: 'Test',
       backend: :file,
       output_dir: @tmpdir
     )
@@ -26,7 +26,7 @@ class WindowTest < Test::Unit::TestCase
     assert_kind_of RBGL::GUI::FileBackend, window.backend
   end
 
-  test "context is initialized with correct dimensions" do
+  test 'context is initialized with correct dimensions' do
     window = RBGL::GUI::Window.new(
       width: 200,
       height: 150,
@@ -37,7 +37,7 @@ class WindowTest < Test::Unit::TestCase
     assert_equal 150, window.context.height
   end
 
-  test "on registers event handler" do
+  test 'on registers event handler' do
     window = RBGL::GUI::Window.new(
       width: 100,
       height: 100,
@@ -49,7 +49,7 @@ class WindowTest < Test::Unit::TestCase
     assert_false called
   end
 
-  test "on_key delegates to backend" do
+  test 'on_key delegates to backend' do
     window = RBGL::GUI::Window.new(
       width: 100,
       height: 100,
@@ -59,7 +59,7 @@ class WindowTest < Test::Unit::TestCase
     window.on_key { |_key, _action| }
   end
 
-  test "on_mouse delegates to backend" do
+  test 'on_mouse delegates to backend' do
     window = RBGL::GUI::Window.new(
       width: 100,
       height: 100,
@@ -69,7 +69,7 @@ class WindowTest < Test::Unit::TestCase
     window.on_mouse { |_x, _y, _button, _action| }
   end
 
-  test "stop sets running to false" do
+  test 'stop sets running to false' do
     window = RBGL::GUI::Window.new(
       width: 100,
       height: 100,
@@ -79,7 +79,7 @@ class WindowTest < Test::Unit::TestCase
     window.stop
   end
 
-  test "present_framebuffer uses context framebuffer by default" do
+  test 'present_framebuffer uses context framebuffer by default' do
     window = RBGL::GUI::Window.new(
       width: 100,
       height: 100,
@@ -87,10 +87,10 @@ class WindowTest < Test::Unit::TestCase
       output_dir: @tmpdir
     )
     window.present_framebuffer
-    assert File.exist?(File.join(@tmpdir, "frame_00000.ppm"))
+    assert File.exist?(File.join(@tmpdir, 'frame_00000.ppm'))
   end
 
-  test "present_framebuffer can use custom framebuffer" do
+  test 'present_framebuffer can use custom framebuffer' do
     window = RBGL::GUI::Window.new(
       width: 100,
       height: 100,
@@ -101,7 +101,7 @@ class WindowTest < Test::Unit::TestCase
     window.present_framebuffer(fb)
   end
 
-  test "fps returns 0 initially" do
+  test 'fps returns 0 initially' do
     window = RBGL::GUI::Window.new(
       width: 100,
       height: 100,
@@ -111,7 +111,7 @@ class WindowTest < Test::Unit::TestCase
     assert_equal 0, window.fps
   end
 
-  test "raises error for unknown backend" do
+  test 'raises error for unknown backend' do
     assert_raise(RuntimeError) do
       RBGL::GUI::Window.new(
         width: 100,
@@ -121,8 +121,8 @@ class WindowTest < Test::Unit::TestCase
     end
   end
 
-  test "accepts Backend instance directly" do
-    backend = RBGL::GUI::FileBackend.new(100, 100, "Test", output_dir: @tmpdir)
+  test 'accepts Backend instance directly' do
+    backend = RBGL::GUI::FileBackend.new(100, 100, 'Test', output_dir: @tmpdir)
     window = RBGL::GUI::Window.new(
       width: 100,
       height: 100,
@@ -135,7 +135,7 @@ end
 class MockLoopBackend < RBGL::GUI::Backend
   attr_reader :present_count, :poll_count, :closed
 
-  def initialize(width, height, title = "RBGL", max_frames: 2)
+  def initialize(width, height, title = 'RBGL', max_frames: 2)
     super(width, height, title)
     @present_count = 0
     @poll_count = 0
@@ -167,7 +167,7 @@ class MockLoopBackend < RBGL::GUI::Backend
 end
 
 class WindowRunTest < Test::Unit::TestCase
-  test "run executes frame loop" do
+  test 'run executes frame loop' do
     backend = MockLoopBackend.new(100, 100, max_frames: 3)
     window = RBGL::GUI::Window.new(
       width: 100,
@@ -185,7 +185,7 @@ class WindowRunTest < Test::Unit::TestCase
     assert_true backend.closed
   end
 
-  test "run updates fps" do
+  test 'run updates fps' do
     backend = MockLoopBackend.new(100, 100, max_frames: 5)
     window = RBGL::GUI::Window.new(
       width: 100,
@@ -195,11 +195,11 @@ class WindowRunTest < Test::Unit::TestCase
 
     window.run { |_ctx, _dt| }
 
-    assert backend.present_count > 0
-    assert window.fps > 0
+    assert backend.present_count.positive?
+    assert window.fps.positive?
   end
 
-  test "process_events dispatches events to handlers" do
+  test 'process_events dispatches events to handlers' do
     backend = MockLoopBackend.new(100, 100, max_frames: 2)
     window = RBGL::GUI::Window.new(
       width: 100,
@@ -219,7 +219,7 @@ class WindowRunTest < Test::Unit::TestCase
     assert_equal :key_press, received_events[0].type
   end
 
-  test "run with nil frame callback" do
+  test 'run with nil frame callback' do
     backend = MockLoopBackend.new(100, 100, max_frames: 2)
     window = RBGL::GUI::Window.new(
       width: 100,

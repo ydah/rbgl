@@ -3,10 +3,7 @@
 module RBGL
   module Engine
     class Pipeline
-      attr_accessor :vertex_shader, :fragment_shader
-      attr_accessor :depth_test, :depth_write
-      attr_accessor :cull_mode
-      attr_accessor :blend_mode
+      attr_accessor :vertex_shader, :fragment_shader, :depth_test, :depth_write, :cull_mode, :blend_mode
 
       def initialize
         @vertex_shader = nil
@@ -17,18 +14,18 @@ module RBGL
         @blend_mode = :none
       end
 
-      def self.create(&block)
+      def self.create(&)
         pipeline = new
-        pipeline.instance_eval(&block) if block_given?
+        pipeline.instance_eval(&) if block_given?
         pipeline
       end
 
-      def vertex(&block)
-        @vertex_shader = VertexShader.new(&block)
+      def vertex(&)
+        @vertex_shader = VertexShader.new(&)
       end
 
-      def fragment(&block)
-        @fragment_shader = FragmentShader.new(&block)
+      def fragment(&)
+        @fragment_shader = FragmentShader.new(&)
       end
     end
   end

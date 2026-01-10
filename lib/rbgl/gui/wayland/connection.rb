@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "socket"
+require 'socket'
 
 module RBGL
   module GUI
@@ -158,9 +158,9 @@ module RBGL
         attr_reader :compositor, :shm, :xdg_wm_base
 
         def initialize
-          socket_path = ENV["WAYLAND_DISPLAY"] || "wayland-0"
-          unless socket_path.start_with?("/")
-            runtime_dir = ENV["XDG_RUNTIME_DIR"] || "/run/user/#{Process.uid}"
+          socket_path = ENV['WAYLAND_DISPLAY'] || 'wayland-0'
+          unless socket_path.start_with?('/')
+            runtime_dir = ENV['XDG_RUNTIME_DIR'] || "/run/user/#{Process.uid}"
             socket_path = File.join(runtime_dir, socket_path)
           end
 
@@ -188,13 +188,13 @@ module RBGL
 
         def send_request(object_id, opcode, *args)
           payload = pack_args(args)
-          header = [object_id, (payload.bytesize + 8) << 16 | opcode].pack("VV")
+          header = [object_id, ((payload.bytesize + 8) << 16) | opcode].pack('VV')
           @socket.write(header + payload)
         end
 
         def send_request_with_fd(object_id, opcode, *args, fd)
           payload = pack_args(args)
-          header = [object_id, (payload.bytesize + 8) << 16 | opcode].pack("VV")
+          header = [object_id, ((payload.bytesize + 8) << 16) | opcode].pack('VV')
 
           @socket.sendmsg(header + payload, 0, nil, Socket::AncillaryData.unix_rights(fd))
         end
@@ -204,15 +204,15 @@ module RBGL
         end
 
         def dispatch_pending
-          while IO.select([@socket], nil, nil, 0)
+          while @socket.wait_readable(0)
             header = @socket.read(8)
             break unless header && header.bytesize == 8
 
-            object_id, size_and_opcode = header.unpack("VV")
+            object_id, size_and_opcode = header.unpack('VV')
             size = size_and_opcode >> 16
             opcode = size_and_opcode & 0xFFFF
 
-            payload = size > 8 ? @socket.read(size - 8) : ""
+            payload = size > 8 ? @socket.read(size - 8) : ''
             handle_event(object_id, opcode, payload)
           end
         end
@@ -233,42 +233,40 @@ module RBGL
         def handle_event(object_id, opcode, payload)
           case object_id
           when 2
-            if opcode == 0
-              name = payload[0, 4].unpack1("V")
-              interface_len = payload[4, 4].unpack1("V")
+            if opcode.zero?
+              name = payload[0, 4].unpack1('V')
+              interface_len = payload[4, 4].unpack1('V')
               interface = payload[8, interface_len - 1]
-              version = payload[8 + pad_length(interface_len), 4].unpack1("V")
+              version = payload[8 + pad_length(interface_len), 4].unpack1('V')
               @globals[interface] = { name: name, version: version }
             end
           else
             obj = @objects[object_id]
-            if obj.is_a?(Callback) && opcode == 0
-              obj.handle_done
-            end
+            obj.handle_done if obj.is_a?(Callback) && opcode.zero?
           end
         end
 
         def bind_globals
-          if @globals["wl_compositor"]
+          if @globals['wl_compositor']
             id = allocate_id
-            g = @globals["wl_compositor"]
-            @objects[2].bind(g[:name], "wl_compositor", [g[:version], 4].min)
+            g = @globals['wl_compositor']
+            @objects[2].bind(g[:name], 'wl_compositor', [g[:version], 4].min)
             @compositor = Compositor.new(self, id)
             @objects[id] = @compositor
           end
 
-          if @globals["wl_shm"]
+          if @globals['wl_shm']
             id = allocate_id
-            g = @globals["wl_shm"]
-            @objects[2].bind(g[:name], "wl_shm", [g[:version], 1].min)
+            g = @globals['wl_shm']
+            @objects[2].bind(g[:name], 'wl_shm', [g[:version], 1].min)
             @shm = Shm.new(self, id)
             @objects[id] = @shm
           end
 
-          if @globals["xdg_wm_base"]
+          if @globals['xdg_wm_base']
             id = allocate_id
-            g = @globals["xdg_wm_base"]
-            @objects[2].bind(g[:name], "xdg_wm_base", [g[:version], 2].min)
+            g = @globals['xdg_wm_base']
+            @objects[2].bind(g[:name], 'xdg_wm_base', [g[:version], 2].min)
             @xdg_wm_base = XdgWmBase.new(self, id)
             @objects[id] = @xdg_wm_base
           end
@@ -282,14 +280,14 @@ module RBGL
           args.each do |arg|
             case arg
             when Integer
-              result << [arg].pack("V")
+              result << [arg].pack('V')
             when String
               len = arg.bytesize + 1
-              result << [len].pack("V")
+              result << [len].pack('V')
               result << arg << "\x00"
-              result << "\x00" * ((4 - len % 4) % 4)
+              result << ("\x00" * ((4 - (len % 4)) % 4))
             when Float
-              result << [(arg * 256).to_i].pack("V")
+              result << [(arg * 256).to_i].pack('V')
             end
           end
           result
@@ -307,7 +305,7 @@ module RBGL
           @fd = fd
           @size = size
           @wl_buffer = wl_buffer
-          @file = File.open("/proc/self/fd/#{fd}", "r+b")
+          @file = File.open("/proc/self/fd/#{fd}", 'r+b')
           @file.seek(0)
         end
 

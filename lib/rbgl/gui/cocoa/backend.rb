@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 begin
-  require "metaco"
+  require 'metaco'
   METACO_AVAILABLE = true
 rescue LoadError
   METACO_AVAILABLE = false
@@ -11,9 +11,9 @@ module RBGL
   module GUI
     module Cocoa
       class Backend < GUI::Backend
-        def initialize(width, height, title = "RBGL")
+        def initialize(width, height, title = 'RBGL')
           unless METACO_AVAILABLE
-            raise LoadError, "metaco gem is required for Cocoa backend. Install it with: gem install metaco"
+            raise LoadError, 'metaco gem is required for Cocoa backend. Install it with: gem install metaco'
           end
 
           super
@@ -97,8 +97,6 @@ module RBGL
             Event.new(:mouse_release, x: raw[:x], y: raw[:y], button: raw[:button])
           when :mouse_move
             Event.new(:mouse_move, x: raw[:x], y: raw[:y])
-          else
-            nil
           end
         end
 

@@ -1,9 +1,9 @@
 # frozen_string_literal: true
 
-source "https://rubygems.org"
+source 'https://rubygems.org'
 
 gemspec
 
-gem "rake"
-gem "test-unit"
-gem "simplecov", require: false
+gem 'rake'
+gem 'simplecov', require: false
+gem 'test-unit'

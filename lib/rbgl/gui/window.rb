@@ -3,9 +3,9 @@
 module RBGL
   module GUI
     class Window
-      attr_reader :context, :backend, :width, :height
+      attr_reader :context, :backend, :width, :height, :fps
 
-      def initialize(width:, height:, title: "RBGL", backend: :auto, **options)
+      def initialize(width:, height:, title: 'RBGL', backend: :auto, **options)
         @width = width
         @height = height
         @title = title
@@ -17,13 +17,13 @@ module RBGL
                    when :file
                      FileBackend.new(width, height, title, **options)
                    when :x11
-                     require_relative "x11/backend"
+                     require_relative 'x11/backend'
                      X11::Backend.new(width, height, title)
                    when :wayland
-                     require_relative "wayland/backend"
+                     require_relative 'wayland/backend'
                      Wayland::Backend.new(width, height, title)
                    when :cocoa
-                     require_relative "cocoa/backend"
+                     require_relative 'cocoa/backend'
                      Cocoa::Backend.new(width, height, title)
                    when Backend
                      backend
@@ -43,12 +43,12 @@ module RBGL
         @event_handlers[event_type] << block
       end
 
-      def on_key(&block)
-        @backend.on_key(&block)
+      def on_key(&)
+        @backend.on_key(&)
       end
 
-      def on_mouse(&block)
-        @backend.on_mouse(&block)
+      def on_mouse(&)
+        @backend.on_mouse(&)
       end
 
       def run(&frame_callback)
@@ -69,7 +69,7 @@ module RBGL
 
           @frame_count += 1
           elapsed = current_time - @start_time
-          @fps = @frame_count / elapsed if elapsed > 0
+          @fps = @frame_count / elapsed if elapsed.positive?
         end
 
         @backend.close
@@ -108,24 +108,22 @@ module RBGL
         @backend.close
       end
 
-      attr_reader :fps
-
       private
 
       def detect_backend(width, height, title)
         case RUBY_PLATFORM
         when /darwin/
-          require_relative "cocoa/backend"
+          require_relative 'cocoa/backend'
           Cocoa::Backend.new(width, height, title)
         when /linux/
-          if ENV["WAYLAND_DISPLAY"]
-            require_relative "wayland/backend"
+          if ENV['WAYLAND_DISPLAY']
+            require_relative 'wayland/backend'
             Wayland::Backend.new(width, height, title)
-          elsif ENV["DISPLAY"]
-            require_relative "x11/backend"
+          elsif ENV['DISPLAY']
+            require_relative 'x11/backend'
             X11::Backend.new(width, height, title)
           else
-            raise "No display server found (DISPLAY or WAYLAND_DISPLAY not set)"
+            raise 'No display server found (DISPLAY or WAYLAND_DISPLAY not set)'
           end
         else
           raise "Unsupported platform: #{RUBY_PLATFORM}"

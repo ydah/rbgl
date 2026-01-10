@@ -6,10 +6,10 @@
 # License: Creative Commons Attribution-NonCommercial-ShareAlike 3.0
 # https://creativecommons.org/licenses/by-nc-sa/3.0/deed.en
 
-$LOAD_PATH.unshift File.expand_path("../lib", __dir__)
+$LOAD_PATH.unshift File.expand_path('../lib', __dir__)
 
-require "rbgl"
-require "rlsl"
+require 'rbgl'
+require 'rlsl'
 
 WIDTH = 640
 HEIGHT = 480
@@ -377,17 +377,17 @@ shader = RLSL.define_metal(:fractured_orb_metal) do
 end
 
 # Initialize display
-window = RBGL::GUI::Window.new(width: WIDTH, height: HEIGHT, title: "Fractured Orb (Metal)")
+window = RBGL::GUI::Window.new(width: WIDTH, height: HEIGHT, title: 'Fractured Orb (Metal)')
 
 unless window.metal_available?
-  puts "Metal is not available!"
+  puts 'Metal is not available!'
   exit 1
 end
 
-puts "Fractured Orb"
-puts "Original: https://www.shadertoy.com/view/ttycWW"
-puts "License: Creative Commons Attribution-NonCommercial-ShareAlike 3.0"
-puts "https://creativecommons.org/licenses/by-nc-sa/3.0/deed.en"
+puts 'Fractured Orb'
+puts 'Original: https://www.shadertoy.com/view/ttycWW'
+puts 'License: Creative Commons Attribution-NonCommercial-ShareAlike 3.0'
+puts 'https://creativecommons.org/licenses/by-nc-sa/3.0/deed.en'
 puts "Press 'q' or Escape to quit"
 
 start_time = Time.now
@@ -401,7 +401,7 @@ while running && !window.should_close?
 
   begin
     shader.render_metal(window.native_handle, WIDTH, HEIGHT, { time: time, rand_seed: rand_seed })
-  rescue => e
+  rescue StandardError => e
     puts "Error: #{e.message}"
     puts e.backtrace.first(10).join("\n")
     running = false
@@ -410,19 +410,17 @@ while running && !window.should_close?
 
   events = window.poll_events_raw
   events.each do |e|
-    if e[:type] == :key_press && (e[:key] == 12 || e[:key] == "q")
-      running = false
-    end
+    running = false if e[:type] == :key_press && [12, 'q'].include?(e[:key])
   end
 
   frame_count += 1
   now = Time.now
-  if now - last_fps_time >= 1.0
-    fps = frame_count / (now - last_fps_time)
-    puts "FPS: #{fps.round(1)}"
-    frame_count = 0
-    last_fps_time = now
-  end
+  next unless now - last_fps_time >= 1.0
+
+  fps = frame_count / (now - last_fps_time)
+  puts "FPS: #{fps.round(1)}"
+  frame_count = 0
+  last_fps_time = now
 end
 
 window.close

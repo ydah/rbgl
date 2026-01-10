@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-require "socket"
+require 'socket'
 
 module RBGL
   module GUI
     module X11
       class Connection
-        attr_reader :default_screen, :resource_id_base, :resource_id_mask
-        attr_reader :root, :root_depth, :root_visual, :white_pixel, :black_pixel
+        attr_reader :default_screen, :resource_id_base, :resource_id_mask, :root, :root_depth, :root_visual,
+                    :white_pixel, :black_pixel
 
         def initialize(display_name)
           host, display_num, _screen_num = parse_display_name(display_name)
@@ -78,17 +78,17 @@ module RBGL
             class_val,
             visual,
             mask
-          ].pack("CVVSSSSSVV") + value_list.pack("V*")
+          ].pack('CVVSSSSSVV') + value_list.pack('V*')
 
           send_request(1, request)
         end
 
         def map_window(wid)
-          send_request(8, [wid].pack("V"))
+          send_request(8, [wid].pack('V'))
         end
 
         def destroy_window(wid)
-          send_request(4, [wid].pack("V"))
+          send_request(4, [wid].pack('V'))
         end
 
         def create_gc(gc_id, drawable, values = {})
@@ -105,7 +105,7 @@ module RBGL
             value_list << values[:background]
           end
 
-          request = [gc_id, drawable, mask].pack("VVV") + value_list.pack("V*")
+          request = [gc_id, drawable, mask].pack('VVV') + value_list.pack('V*')
           send_request(55, request)
         end
 
@@ -126,7 +126,7 @@ module RBGL
             dst_x, dst_y,
             left_pad,
             depth
-          ].pack("VVvvvvCC") + "\x00\x00"
+          ].pack('VVvvvvCC') + "\x00\x00"
 
           send_request_with_data(72, format_byte, header, data)
         end
@@ -151,7 +151,7 @@ module RBGL
             type_atom,
             format,
             data_bytes.bytesize
-          ].pack("VVVCV") + "\x00\x00\x00" + pad_to_4(data_bytes)
+          ].pack('VVVCV') + "\x00\x00\x00" + pad_to_4(data_bytes)
 
           send_request(18, request, mode_val)
         end
@@ -160,7 +160,7 @@ module RBGL
           request = [
             name.bytesize,
             0
-          ].pack("vv") + pad_to_4(name)
+          ].pack('vv') + pad_to_4(name)
 
           send_request(16, request, only_if_exists ? 1 : 0)
           flush
@@ -168,7 +168,7 @@ module RBGL
           reply = read_reply
           return 0 unless reply
 
-          reply[8, 4].unpack1("V")
+          reply[8, 4].unpack1('V')
         end
 
         def next_event
@@ -179,7 +179,7 @@ module RBGL
         end
 
         def read_events
-          while pending > 0
+          while pending.positive?
             event = read_event
             @pending_events << event if event
           end
@@ -188,15 +188,13 @@ module RBGL
         private
 
         def parse_display_name(name)
-          if name =~ /^(?:(.+):)?(\d+)(?:\.(\d+))?$/
-            [::Regexp.last_match(1), ::Regexp.last_match(2).to_i, (::Regexp.last_match(3) || 0).to_i]
-          else
-            raise "Invalid display name: #{name}"
-          end
+          raise "Invalid display name: #{name}" unless name =~ /^(?:(.+):)?(\d+)(?:\.(\d+))?$/
+
+          [::Regexp.last_match(1), ::Regexp.last_match(2).to_i, (::Regexp.last_match(3) || 0).to_i]
         end
 
         def connect(host, display_num)
-          if host.nil? || host.empty? || host == "unix"
+          if host.nil? || host.empty? || host == 'unix'
             socket_path = "/tmp/.X11-unix/X#{display_num}"
             UNIXSocket.new(socket_path)
           else
@@ -211,46 +209,46 @@ module RBGL
             11, 0,
             0, 0,
             0, 0
-          ].pack("CCvvvvvv")
+          ].pack('CCvvvvvv')
 
           @socket.write(init_request)
           @socket.flush
 
           header = @socket.read(8)
-          status = header.unpack1("C")
+          status = header.unpack1('C')
 
-          raise "X11 connection failed" unless status == 1
+          raise 'X11 connection failed' unless status == 1
 
-          additional_length = header[6, 2].unpack1("v")
+          additional_length = header[6, 2].unpack1('v')
           data = @socket.read(additional_length * 4)
 
           parse_server_info(data)
         end
 
         def parse_server_info(data)
-          @resource_id_base = data[4, 4].unpack1("V")
-          @resource_id_mask = data[8, 4].unpack1("V")
+          @resource_id_base = data[4, 4].unpack1('V')
+          @resource_id_mask = data[8, 4].unpack1('V')
 
-          vendor_length = data[16, 2].unpack1("v")
-          num_screens = data[20, 1].unpack1("C")
-          num_formats = data[21, 1].unpack1("C")
+          vendor_length = data[16, 2].unpack1('v')
+          num_screens = data[20, 1].unpack1('C')
+          num_formats = data[21, 1].unpack1('C')
 
-          offset = 32 + pad_length(vendor_length) + num_formats * 8
+          offset = 32 + pad_length(vendor_length) + (num_formats * 8)
 
-          if num_screens > 0
-            @root = data[offset, 4].unpack1("V")
-            @root_depth = data[offset + 38, 1].unpack1("C")
-            @root_visual = data[offset + 32, 4].unpack1("V")
-            @white_pixel = data[offset + 8, 4].unpack1("V")
-            @black_pixel = data[offset + 12, 4].unpack1("V")
-          end
+          return unless num_screens.positive?
+
+          @root = data[offset, 4].unpack1('V')
+          @root_depth = data[offset + 38, 1].unpack1('C')
+          @root_visual = data[offset + 32, 4].unpack1('V')
+          @white_pixel = data[offset + 8, 4].unpack1('V')
+          @black_pixel = data[offset + 12, 4].unpack1('V')
         end
 
         def send_request(opcode, data, extra = 0)
           length = (4 + data.bytesize + 3) / 4
-          header = [opcode, extra, length].pack("CCv")
+          header = [opcode, extra, length].pack('CCv')
 
-          padding_size = length * 4 - 4 - data.bytesize
+          padding_size = (length * 4) - 4 - data.bytesize
           padded_data = data + ("\x00" * padding_size)
 
           @socket.write(header + padded_data)
@@ -261,8 +259,8 @@ module RBGL
           total_data = header_data + bulk_data
           length = (4 + total_data.bytesize + 3) / 4
 
-          header = [opcode, extra, length].pack("CCv")
-          padding_size = length * 4 - 4 - total_data.bytesize
+          header = [opcode, extra, length].pack('CCv')
+          padding_size = (length * 4) - 4 - total_data.bytesize
           padded = total_data + ("\x00" * padding_size)
 
           @socket.write(header + padded)
@@ -273,8 +271,8 @@ module RBGL
           header = @socket.read(32)
           return nil unless header && header.bytesize == 32
 
-          additional = header[4, 4].unpack1("V")
-          if additional > 0
+          additional = header[4, 4].unpack1('V')
+          if additional.positive?
             header + @socket.read(additional * 4)
           else
             header
@@ -285,34 +283,34 @@ module RBGL
           data = @socket.read(32)
           return nil unless data && data.bytesize == 32
 
-          event_type = data.unpack1("C") & 0x7F
+          event_type = data.unpack1('C') & 0x7F
 
           case event_type
           when 2
-            keycode = data[1, 1].unpack1("C")
+            keycode = data[1, 1].unpack1('C')
             { type: :key_press, keycode: keycode }
           when 3
-            keycode = data[1, 1].unpack1("C")
+            keycode = data[1, 1].unpack1('C')
             { type: :key_release, keycode: keycode }
           when 4
-            x, y = data[24, 4].unpack("ss")
-            button = data[1, 1].unpack1("C")
+            x, y = data[24, 4].unpack('ss')
+            button = data[1, 1].unpack1('C')
             { type: :button_press, x: x, y: y, button: button }
           when 5
-            x, y = data[24, 4].unpack("ss")
-            button = data[1, 1].unpack1("C")
+            x, y = data[24, 4].unpack('ss')
+            button = data[1, 1].unpack1('C')
             { type: :button_release, x: x, y: y, button: button }
           when 6
-            x, y = data[24, 4].unpack("ss")
+            x, y = data[24, 4].unpack('ss')
             { type: :motion_notify, x: x, y: y }
           when 12
             { type: :exposure }
           when 22
-            width, height = data[20, 4].unpack("vv")
+            width, height = data[20, 4].unpack('vv')
             { type: :configure_notify, width: width, height: height }
           when 33
-            window = data[4, 4].unpack1("V")
-            atom = data[8, 4].unpack1("V")
+            window = data[4, 4].unpack1('V')
+            atom = data[8, 4].unpack1('V')
             { type: :client_message, window: window, data: atom }
           else
             { type: :unknown, code: event_type }
@@ -323,15 +321,15 @@ module RBGL
           case name
           when :wm_name then 39
           when :string then 31
-          when :wm_protocols then intern_atom("WM_PROTOCOLS")
-          when :wm_delete_window then intern_atom("WM_DELETE_WINDOW")
+          when :wm_protocols then intern_atom('WM_PROTOCOLS')
+          when :wm_delete_window then intern_atom('WM_DELETE_WINDOW')
           else
             name.is_a?(Integer) ? name : intern_atom(name.to_s)
           end
         end
 
         def pad_to_4(str)
-          padding = (4 - str.bytesize % 4) % 4
+          padding = (4 - (str.bytesize % 4)) % 4
           str + ("\x00" * padding)
         end
 

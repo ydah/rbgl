@@ -5,10 +5,10 @@
 # Created by @byt3_m3chanic - 12/17/2024
 # License: Creative Commons Attribution-NonCommercial-ShareAlike 3.0
 
-$LOAD_PATH.unshift File.expand_path("../lib", __dir__)
+$LOAD_PATH.unshift File.expand_path('../lib', __dir__)
 
-require "rbgl"
-require "rlsl"
+require 'rbgl'
+require 'rlsl'
 
 WIDTH = 640
 HEIGHT = 480
@@ -284,13 +284,13 @@ shader = RLSL.define(:hexflow) do
 end
 
 # Initialize display
-window = RBGL::GUI::Window.new(width: WIDTH, height: HEIGHT, title: "Hexagon X5")
+window = RBGL::GUI::Window.new(width: WIDTH, height: HEIGHT, title: 'Hexagon X5')
 
-puts "Hexagon X5 - Hexagonal Flow Pattern"
-puts "Original: https://www.shadertoy.com/view/4cVfWG"
-puts "License: Creative Commons Attribution-NonCommercial-ShareAlike 3.0"
-puts "https://creativecommons.org/licenses/by-nc-sa/3.0/deed.en"
-puts "Move mouse to pan"
+puts 'Hexagon X5 - Hexagonal Flow Pattern'
+puts 'Original: https://www.shadertoy.com/view/4cVfWG'
+puts 'License: Creative Commons Attribution-NonCommercial-ShareAlike 3.0'
+puts 'https://creativecommons.org/licenses/by-nc-sa/3.0/deed.en'
+puts 'Move mouse to pan'
 puts "Press 'q' or Escape to quit"
 
 start_time = Time.now
@@ -313,7 +313,7 @@ while running && !window.should_close?
   events.each do |e|
     case e[:type]
     when :key_press
-      running = false if e[:key] == 12 || e[:key] == "q"
+      running = false if [12, 'q'].include?(e[:key])
     when :mouse_move
       mouse_x = e[:x].to_f
       mouse_y = e[:y].to_f
@@ -322,12 +322,12 @@ while running && !window.should_close?
 
   frame_count += 1
   now = Time.now
-  if now - last_fps_time >= 1.0
-    fps = frame_count / (now - last_fps_time)
-    puts "FPS: #{fps.round(1)}"
-    frame_count = 0
-    last_fps_time = now
-  end
+  next unless now - last_fps_time >= 1.0
+
+  fps = frame_count / (now - last_fps_time)
+  puts "FPS: #{fps.round(1)}"
+  frame_count = 0
+  last_fps_time = now
 end
 
 window.close

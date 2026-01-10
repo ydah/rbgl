@@ -3,10 +3,10 @@
 # Color Test - RGB verification
 # Displays red, green, blue, and yellow squares
 
-$LOAD_PATH.unshift File.expand_path("../lib", __dir__)
+$LOAD_PATH.unshift File.expand_path('../lib', __dir__)
 
-require "rbgl"
-require "rlsl"
+require 'rbgl'
+require 'rlsl'
 
 WIDTH = 640
 HEIGHT = 480
@@ -35,11 +35,11 @@ shader = RLSL.define(:color_test) do
 end
 
 # Initialize display
-window = RBGL::GUI::Window.new(width: WIDTH, height: HEIGHT, title: "Color Test")
+window = RBGL::GUI::Window.new(width: WIDTH, height: HEIGHT, title: 'Color Test')
 
-puts "Color Test"
-puts "Top-left: Red, Top-right: Green"
-puts "Bottom-left: Blue, Bottom-right: Yellow"
+puts 'Color Test'
+puts 'Top-left: Red, Top-right: Green'
+puts 'Bottom-left: Blue, Bottom-right: Yellow'
 puts "Press 'q' or Escape to quit"
 
 running = true
@@ -52,9 +52,7 @@ while running && !window.should_close?
 
   events = window.poll_events_raw
   events.each do |e|
-    if e[:type] == :key_press && (e[:key] == 12 || e[:key] == "q")
-      running = false
-    end
+    running = false if e[:type] == :key_press && [12, 'q'].include?(e[:key])
   end
 end
 

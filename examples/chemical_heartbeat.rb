@@ -5,10 +5,10 @@
 # License: Creative Commons Attribution-NonCommercial-ShareAlike 3.0
 # https://creativecommons.org/licenses/by-nc-sa/3.0/deed.en
 
-$LOAD_PATH.unshift File.expand_path("../lib", __dir__)
+$LOAD_PATH.unshift File.expand_path('../lib', __dir__)
 
-require "rbgl"
-require "rlsl"
+require 'rbgl'
+require 'rlsl'
 
 WIDTH = 640
 HEIGHT = 480
@@ -60,19 +60,19 @@ shader = RLSL.define(:chemical_heartbeat) do
     diff_x = pos_x - ax
     diff_y = pos_y - ay
 
-    warp = hash_a + (hash_b - hash_a) * diff_x
-    warp = warp + ((hash_c + (hash_d - hash_c) * diff_x) - warp) * diff_y
-    warp = warp + u.time * warp_speed
+    warp = hash_a + ((hash_b - hash_a) * diff_x)
+    warp += (((hash_c + ((hash_d - hash_c) * diff_x)) - warp) * diff_y)
+    warp += (u.time * warp_speed)
 
     smoothed = (1.0 + cos(warp * TAU)) * 0.5
-    clamped = smoothed * warp_scale - warp_clamp
+    clamped = (smoothed * warp_scale) - warp_clamp
     clamped = clamp(clamped, 0.0, 1.0)
 
-    ux = base_ux + cos(clamped) * warp_amplitude
-    uy = base_uy + sin(clamped) * warp_amplitude
+    ux = base_ux + (cos(clamped) * warp_amplitude)
+    uy = base_uy + (sin(clamped) * warp_amplitude)
 
     # Axial from pixel
-    axial_q = (sqrt3_div3 * ux - one_div3 * uy) * inv_hex_size
+    axial_q = ((sqrt3_div3 * ux) - (one_div3 * uy)) * inv_hex_size
     axial_r = two_div3 * uy * inv_hex_size
     axial_s = 0.0 - axial_q - axial_r
 
@@ -95,7 +95,7 @@ shader = RLSL.define(:chemical_heartbeat) do
     hash_val = hash21(vec2(q, r))
 
     # Animated color value
-    value = fract(hash_val + u.time * time_dilation)
+    value = fract(hash_val + (u.time * time_dilation))
     value = smoothstep(0.0, 1.0, value)
     value = (1.0 + cos(value * TAU)) * 0.5
 
@@ -112,12 +112,12 @@ shader = RLSL.define(:chemical_heartbeat) do
 end
 
 # Initialize display
-window = RBGL::GUI::Window.new(width: WIDTH, height: HEIGHT, title: "Chemical Heartbeat")
+window = RBGL::GUI::Window.new(width: WIDTH, height: HEIGHT, title: 'Chemical Heartbeat')
 
-puts "Chemical Heartbeat"
-puts "Original: https://www.shadertoy.com/view/lXtXD4"
-puts "License: Creative Commons Attribution-NonCommercial-ShareAlike 3.0"
-puts "https://creativecommons.org/licenses/by-nc-sa/3.0/deed.en"
+puts 'Chemical Heartbeat'
+puts 'Original: https://www.shadertoy.com/view/lXtXD4'
+puts 'License: Creative Commons Attribution-NonCommercial-ShareAlike 3.0'
+puts 'https://creativecommons.org/licenses/by-nc-sa/3.0/deed.en'
 puts "Press 'q' or Escape to quit"
 
 start_time = Time.now
@@ -133,34 +133,32 @@ while running && !window.should_close?
   # Camera movement
   circle_value = time * 0.1
   wave_value = time * 0.33
-  radius = 1.0 + Math.cos(wave_value) * 0.25
+  radius = 1.0 + (Math.cos(wave_value) * 0.25)
   camera_x = Math.cos(circle_value) * radius
   camera_y = Math.sin(circle_value) * radius
 
   # Render using compiled shader
   shader.render(buffer, WIDTH, HEIGHT, {
-    time: time,
-    camera_x: camera_x,
-    camera_y: camera_y
-  })
+                  time: time,
+                  camera_x: camera_x,
+                  camera_y: camera_y
+                })
 
   window.set_pixels(buffer)
 
   events = window.poll_events_raw
   events.each do |e|
-    if e[:type] == :key_press && (e[:key] == 12 || e[:key] == "q")
-      running = false
-    end
+    running = false if e[:type] == :key_press && [12, 'q'].include?(e[:key])
   end
 
   frame_count += 1
   now = Time.now
-  if now - last_fps_time >= 1.0
-    fps = frame_count / (now - last_fps_time)
-    puts "FPS: #{fps.round(1)}"
-    frame_count = 0
-    last_fps_time = now
-  end
+  next unless now - last_fps_time >= 1.0
+
+  fps = frame_count / (now - last_fps_time)
+  puts "FPS: #{fps.round(1)}"
+  frame_count = 0
+  last_fps_time = now
 end
 
 window.close
