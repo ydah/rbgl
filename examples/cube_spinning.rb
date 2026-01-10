@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-$LOAD_PATH.unshift File.expand_path("../lib", __dir__)
+$LOAD_PATH.unshift File.expand_path('../lib', __dir__)
 
-require "rbgl"
+require 'rbgl'
 
 include Larb
 include RBGL::Engine
@@ -10,7 +10,7 @@ include RBGL::Engine
 window = RBGL::GUI::Window.new(
   width: 320,
   height: 240,
-  title: "Spinning Cube",
+  title: 'Spinning Cube',
   backend: :auto
 )
 
@@ -67,7 +67,7 @@ view = Mat4.look_at(
 
 window.on(:key_press) do |event|
   puts "Key pressed: #{event.key}"
-  window.stop if event.key == 12 || event.key == "q" || event.key == "Escape"
+  window.stop if [12, 'q', 'Escape'].include?(event.key)
 end
 
 puts "Press 'q' or Escape to quit"
@@ -79,7 +79,7 @@ window.run do |ctx, dt|
   projection = Mat4.perspective(Math::PI / 4, ctx.aspect_ratio, 0.1, 100)
   mvp = projection * view * model
 
-  ctx.clear(color: Color.from_hex("#0f0f23"))
+  ctx.clear(color: Color.from_hex('#0f0f23'))
   ctx.bind_pipeline(pipeline)
   ctx.bind_vertex_buffer(cube)
   ctx.set_uniform(:mvp, mvp)

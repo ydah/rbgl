@@ -1,54 +1,16 @@
 # frozen_string_literal: true
 
-require_relative "connection"
+require_relative 'connection'
 
 module RBGL
   module GUI
     module X11
       class Backend < GUI::Backend
-        def initialize(width, height, title = "RBGL")
+        def initialize(width, height, title = 'RBGL')
           super
-          @display = Connection.new(ENV["DISPLAY"] || ":0")
+          @display = Connection.new(ENV['DISPLAY'] || ':0')
           @windows = {}
           setup_window(width, height, title)
-        end
-
-        private def setup_window(w, h, t)
-          wid = @display.generate_id
-
-          @display.create_window(
-            depth: @display.root_depth,
-            wid: wid,
-            parent: @display.root,
-            x: 0, y: 0,
-            width: w, height: h,
-            border_width: 0,
-            window_class: :input_output,
-            visual: @display.root_visual,
-            value_mask: [:back_pixel, :event_mask],
-            values: {
-              back_pixel: @display.black_pixel,
-              event_mask: [:exposure, :key_press, :key_release,
-                           :button_press, :button_release, :pointer_motion,
-                           :structure_notify]
-            }
-          )
-
-          @display.change_property(wid, :wm_name, :string, t)
-          @display.map_window(wid)
-          @display.flush
-
-          gc_id = @display.generate_id
-          @display.create_gc(gc_id, wid)
-
-          @windows[wid] = {
-            width: w,
-            height: h,
-            gc: gc_id,
-            should_close: false
-          }
-
-          @handle = wid
         end
 
         def present(framebuffer)
@@ -76,7 +38,7 @@ module RBGL
         def poll_events
           events = []
 
-          while @display.pending > 0
+          while @display.pending.positive?
             raw_event = @display.next_event
             next unless raw_event
 
@@ -106,6 +68,44 @@ module RBGL
 
         private
 
+        def setup_window(w, h, t)
+          wid = @display.generate_id
+
+          @display.create_window(
+            depth: @display.root_depth,
+            wid: wid,
+            parent: @display.root,
+            x: 0, y: 0,
+            width: w, height: h,
+            border_width: 0,
+            window_class: :input_output,
+            visual: @display.root_visual,
+            value_mask: %i[back_pixel event_mask],
+            values: {
+              back_pixel: @display.black_pixel,
+              event_mask: %i[exposure key_press key_release
+                             button_press button_release pointer_motion
+                             structure_notify]
+            }
+          )
+
+          @display.change_property(wid, :wm_name, :string, t)
+          @display.map_window(wid)
+          @display.flush
+
+          gc_id = @display.generate_id
+          @display.create_gc(gc_id, wid)
+
+          @windows[wid] = {
+            width: w,
+            height: h,
+            gc: gc_id,
+            should_close: false
+          }
+
+          @handle = wid
+        end
+
         def convert_to_x11_format(framebuffer)
           # X11 uses BGRX format (blue, green, red, padding)
           framebuffer.to_bgra_bytes
@@ -126,12 +126,8 @@ module RBGL
           when :configure_notify
             Event.new(:resize, width: raw[:width], height: raw[:height])
           when :client_message
-            if @handle && @windows[@handle]
-              @windows[@handle][:should_close] = true
-            end
+            @windows[@handle][:should_close] = true if @handle && @windows[@handle]
             Event.new(:close)
-          else
-            nil
           end
         end
 

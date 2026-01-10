@@ -3,7 +3,7 @@
 module RBGL
   module GUI
     class FileBackend < Backend
-      def initialize(width, height, title = "RBGL", format: :ppm, output_dir: ".")
+      def initialize(width, height, title = 'RBGL', format: :ppm, output_dir: '.')
         super(width, height, title)
         @format = format
         @output_dir = output_dir
@@ -29,8 +29,7 @@ module RBGL
         @should_close = true if @max_frames && @frame_count >= @max_frames
       end
 
-      def poll_events
-      end
+      def poll_events; end
 
       def should_close?
         @should_close
@@ -49,7 +48,7 @@ module RBGL
       def to_bmp(framebuffer)
         w = framebuffer.width
         h = framebuffer.height
-        row_size = ((24 * w + 31) / 32) * 4
+        row_size = (((24 * w) + 31) / 32) * 4
         pixel_data_size = row_size * h
         file_size = 54 + pixel_data_size
 
@@ -58,7 +57,7 @@ module RBGL
           file_size,
           0, 0,
           54
-        ].pack("CCVvvV")
+        ].pack('CCVvvV')
 
         dib = [
           40,
@@ -69,18 +68,18 @@ module RBGL
           pixel_data_size,
           2835, 2835,
           0, 0
-        ].pack("VVVvvVVVVVV")
+        ].pack('VVVvvVVVVVV')
 
-        pixels = +""
+        pixels = +''
         (h - 1).downto(0) do |y|
-          row = +""
+          row = +''
           w.times do |x|
             color = framebuffer.get_pixel(x, y)
             bytes = color.to_bytes
-            row << [bytes[2], bytes[1], bytes[0]].pack("CCC")
+            row << [bytes[2], bytes[1], bytes[0]].pack('CCC')
           end
-          padding = row_size - w * 3
-          row << "\x00" * padding
+          padding = row_size - (w * 3)
+          row << ("\x00" * padding)
           pixels << row
         end
 

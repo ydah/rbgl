@@ -13,33 +13,33 @@ module RBGL
       end
 
       def get_pixel(x, y)
-        return nil if x < 0 || x >= @width || y < 0 || y >= @height
+        return nil if x.negative? || x >= @width || y.negative? || y >= @height
 
-        @color_buffer[y * @width + x]
+        @color_buffer[(y * @width) + x]
       end
 
       def set_pixel(x, y, color)
-        return if x < 0 || x >= @width || y < 0 || y >= @height
+        return if x.negative? || x >= @width || y.negative? || y >= @height
 
-        @color_buffer[y * @width + x] = color
+        @color_buffer[(y * @width) + x] = color
       end
 
       def get_depth(x, y)
-        return Float::INFINITY if x < 0 || x >= @width || y < 0 || y >= @height
+        return Float::INFINITY if x.negative? || x >= @width || y.negative? || y >= @height
 
-        @depth_buffer[y * @width + x]
+        @depth_buffer[(y * @width) + x]
       end
 
       def set_depth(x, y, depth)
-        return if x < 0 || x >= @width || y < 0 || y >= @height
+        return if x.negative? || x >= @width || y.negative? || y >= @height
 
-        @depth_buffer[y * @width + x] = depth
+        @depth_buffer[(y * @width) + x] = depth
       end
 
       def write_pixel(x, y, color, depth, depth_test: true)
-        return false if x < 0 || x >= @width || y < 0 || y >= @height
+        return false if x.negative? || x >= @width || y.negative? || y >= @height
 
-        idx = y * @width + x
+        idx = (y * @width) + x
         if !depth_test || depth < @depth_buffer[idx]
           @color_buffer[idx] = color
           @depth_buffer[idx] = depth
@@ -66,18 +66,18 @@ module RBGL
         ppm = "P3\n#{@width} #{@height}\n255\n"
         @height.times do |y|
           row = @width.times.map do |x|
-            c = @color_buffer[y * @width + x]
+            c = @color_buffer[(y * @width) + x]
             bytes = c.to_bytes
             "#{bytes[0]} #{bytes[1]} #{bytes[2]}"
           end
-          ppm += row.join(" ") + "\n"
+          ppm += "#{row.join(' ')}\n"
         end
         ppm
       end
 
       def to_ppm_binary
         header = "P6\n#{@width} #{@height}\n255\n"
-        pixels = @color_buffer.flat_map { |c| c.to_bytes[0..2] }.pack("C*")
+        pixels = @color_buffer.flat_map { |c| c.to_bytes[0..2] }.pack('C*')
         header + pixels
       end
 
@@ -93,7 +93,7 @@ module RBGL
           bytes[i + 3] = (c.a * 255).round.clamp(0, 255)
           i += 4
         end
-        bytes.pack("C*")
+        bytes.pack('C*')
       end
 
       def to_bgra_bytes
@@ -108,7 +108,7 @@ module RBGL
           bytes[i + 3] = (c.a * 255).round.clamp(0, 255)
           i += 4
         end
-        bytes.pack("C*")
+        bytes.pack('C*')
       end
     end
   end

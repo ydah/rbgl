@@ -25,9 +25,9 @@ module RBGL
 
         case cull_mode
         when :back
-          return if area < 0
+          return if area.negative?
         when :front
-          return if area > 0
+          return if area.positive?
         end
 
         (min_y..max_y).each do |y|
@@ -40,21 +40,21 @@ module RBGL
             w1 = edge_function(p2, p0, p)
             w2 = edge_function(p0, p1, p)
 
-            if (w0 >= 0 && w1 >= 0 && w2 >= 0) || (w0 <= 0 && w1 <= 0 && w2 <= 0)
-              inv_area = 1.0 / area
-              w0 *= inv_area
-              w1 *= inv_area
-              w2 *= inv_area
+            next unless (w0 >= 0 && w1 >= 0 && w2 >= 0) || (w0 <= 0 && w1 <= 0 && w2 <= 0)
 
-              depth = w0 * p0.z + w1 * p1.z + w2 * p2.z
+            inv_area = 1.0 / area
+            w0 *= inv_area
+            w1 *= inv_area
+            w2 *= inv_area
 
-              interpolated = interpolate_attributes(v0, v1, v2, w0, w1, w2)
+            depth = (w0 * p0.z) + (w1 * p1.z) + (w2 * p2.z)
 
-              frag_output = fragment_shader.process(interpolated, uniforms)
-              color = frag_output[:color]
+            interpolated = interpolate_attributes(v0, v1, v2, w0, w1, w2)
 
-              @framebuffer.write_pixel(x, y, color, depth)
-            end
+            frag_output = fragment_shader.process(interpolated, uniforms)
+            color = frag_output[:color]
+
+            @framebuffer.write_pixel(x, y, color, depth)
           end
         end
       end
@@ -74,13 +74,13 @@ module RBGL
         sy = y0 < y1 ? 1 : -1
         err = dx + dy
 
-        total_dist = Math.sqrt((x1 - x0)**2 + (y1 - y0)**2)
+        total_dist = Math.sqrt(((x1 - x0)**2) + ((y1 - y0)**2))
 
         loop do
-          current_dist = Math.sqrt((x0 - p0.x.round)**2 + (y0 - p0.y.round)**2)
-          t = total_dist > 0 ? current_dist / total_dist : 0
+          current_dist = Math.sqrt(((x0 - p0.x.round)**2) + ((y0 - p0.y.round)**2))
+          t = total_dist.positive? ? current_dist / total_dist : 0
 
-          depth = p0.z + (p1.z - p0.z) * t
+          depth = p0.z + ((p1.z - p0.z) * t)
 
           interpolated = interpolate_line_attributes(v0, v1, t)
 
@@ -126,14 +126,14 @@ module RBGL
               end
 
         Larb::Vec3.new(
-          (ndc.x + 1) * 0.5 * @viewport[:width] + @viewport[:x],
-          (1 - ndc.y) * 0.5 * @viewport[:height] + @viewport[:y],
+          ((ndc.x + 1) * 0.5 * @viewport[:width]) + @viewport[:x],
+          ((1 - ndc.y) * 0.5 * @viewport[:height]) + @viewport[:y],
           (ndc.z + 1) * 0.5
         )
       end
 
       def edge_function(a, b, c)
-        (c.x - a.x) * (b.y - a.y) - (c.y - a.y) * (b.x - a.x)
+        ((c.x - a.x) * (b.y - a.y)) - ((c.y - a.y) * (b.x - a.x))
       end
 
       def interpolate_attributes(v0, v1, v2, w0, w1, w2)
@@ -157,31 +157,31 @@ module RBGL
         case a
         when Larb::Vec2
           Larb::Vec2.new(
-            a.x * w0 + b.x * w1 + c.x * w2,
-            a.y * w0 + b.y * w1 + c.y * w2
+            (a.x * w0) + (b.x * w1) + (c.x * w2),
+            (a.y * w0) + (b.y * w1) + (c.y * w2)
           )
         when Larb::Vec3
           Larb::Vec3.new(
-            a.x * w0 + b.x * w1 + c.x * w2,
-            a.y * w0 + b.y * w1 + c.y * w2,
-            a.z * w0 + b.z * w1 + c.z * w2
+            (a.x * w0) + (b.x * w1) + (c.x * w2),
+            (a.y * w0) + (b.y * w1) + (c.y * w2),
+            (a.z * w0) + (b.z * w1) + (c.z * w2)
           )
         when Larb::Vec4
           Larb::Vec4.new(
-            a.x * w0 + b.x * w1 + c.x * w2,
-            a.y * w0 + b.y * w1 + c.y * w2,
-            a.z * w0 + b.z * w1 + c.z * w2,
-            a.w * w0 + b.w * w1 + c.w * w2
+            (a.x * w0) + (b.x * w1) + (c.x * w2),
+            (a.y * w0) + (b.y * w1) + (c.y * w2),
+            (a.z * w0) + (b.z * w1) + (c.z * w2),
+            (a.w * w0) + (b.w * w1) + (c.w * w2)
           )
         when Larb::Color
           Larb::Color.new(
-            a.r * w0 + b.r * w1 + c.r * w2,
-            a.g * w0 + b.g * w1 + c.g * w2,
-            a.b * w0 + b.b * w1 + c.b * w2,
-            a.a * w0 + b.a * w1 + c.a * w2
+            (a.r * w0) + (b.r * w1) + (c.r * w2),
+            (a.g * w0) + (b.g * w1) + (c.g * w2),
+            (a.b * w0) + (b.b * w1) + (c.b * w2),
+            (a.a * w0) + (b.a * w1) + (c.a * w2)
           )
         when Numeric
-          a * w0 + b * w1 + c * w2
+          (a * w0) + (b * w1) + (c * w2)
         else
           a
         end
@@ -200,7 +200,7 @@ module RBGL
                         when Larb::Vec2, Larb::Vec3, Larb::Vec4, Larb::Color
                           a0.lerp(a1, t)
                         when Numeric
-                          a0 + (a1 - a0) * t
+                          a0 + ((a1 - a0) * t)
                         else
                           a0
                         end

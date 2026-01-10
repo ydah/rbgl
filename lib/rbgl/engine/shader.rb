@@ -8,8 +8,8 @@ module RBGL
       end
 
       def method_missing(name, *args)
-        if name.to_s.end_with?("=")
-          @data[name.to_s.chomp("=").to_sym] = args.first
+        if name.to_s.end_with?('=')
+          @data[name.to_s.chomp('=').to_sym] = args.first
         else
           @data[name]
         end
@@ -42,8 +42,8 @@ module RBGL
       end
 
       def method_missing(name, *args)
-        if name.to_s.end_with?("=")
-          @data[name.to_s.chomp("=").to_sym] = args.first
+        if name.to_s.end_with?('=')
+          @data[name.to_s.chomp('=').to_sym] = args.first
         else
           @data[name]
         end
@@ -87,12 +87,11 @@ module RBGL
       end
 
       def vec4(x, y = nil, z = nil, w = nil)
-        case
-        when y.nil? && z.nil? && w.nil?
+        if y.nil? && z.nil? && w.nil?
           Larb::Vec4.new(x, x, x, x)
-        when x.is_a?(Larb::Vec3) && !y.nil?
+        elsif x.is_a?(Larb::Vec3) && !y.nil?
           Larb::Vec4.new(x.x, x.y, x.z, y)
-        when x.is_a?(Larb::Vec2) && y.is_a?(Larb::Vec2)
+        elsif x.is_a?(Larb::Vec2) && y.is_a?(Larb::Vec2)
           Larb::Vec4.new(x.x, x.y, y.x, y.y)
         else
           Larb::Vec4.new(x, y, z, w)
@@ -121,16 +120,16 @@ module RBGL
 
       def refract(v, n, eta)
         cos_i = -dot(n, v)
-        sin_t2 = eta * eta * (1.0 - cos_i * cos_i)
+        sin_t2 = eta * eta * (1.0 - (cos_i * cos_i))
         return vec3(0) if sin_t2 > 1.0
 
         cos_t = Math.sqrt(1.0 - sin_t2)
-        v * eta + n * (eta * cos_i - cos_t)
+        (v * eta) + (n * ((eta * cos_i) - cos_t))
       end
 
       def mix(a, b, t)
         case a
-        when Numeric then a + (b - a) * t
+        when Numeric then a + ((b - a) * t)
         when Larb::Vec2, Larb::Vec3, Larb::Vec4 then a.lerp(b, t)
         when Larb::Color then a.lerp(b, t)
         end
@@ -156,7 +155,7 @@ module RBGL
 
       def smoothstep(edge0, edge1, x)
         t = ((x - edge0) / (edge1 - edge0)).clamp(0.0, 1.0)
-        t * t * (3.0 - 2.0 * t)
+        t * t * (3.0 - (2.0 * t))
       end
 
       def step(edge, x)
@@ -168,7 +167,7 @@ module RBGL
       end
 
       def mod(x, y)
-        x - y * (x / y).floor
+        x - (y * (x / y).floor)
       end
 
       def abs(x)
@@ -282,15 +281,15 @@ module RBGL
 
         instance_exec(input, uniforms, output, &@process_block)
 
-        raise "VertexShader must set output.position" unless output[:position]
+        raise 'VertexShader must set output.position' unless output[:position]
 
         output
       end
 
       attr_reader :input, :uniforms, :output
 
-      def self.create(&block)
-        new(&block)
+      def self.create(&)
+        new(&)
       end
     end
 
@@ -316,8 +315,8 @@ module RBGL
 
       attr_reader :input, :uniforms, :output
 
-      def self.create(&block)
-        new(&block)
+      def self.create(&)
+        new(&)
       end
     end
   end

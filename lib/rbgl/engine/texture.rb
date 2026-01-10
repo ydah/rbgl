@@ -40,18 +40,18 @@ module RBGL
       def get_pixel(x, y)
         x = x.clamp(0, @width - 1).to_i
         y = y.clamp(0, @height - 1).to_i
-        @data[y * @width + x]
+        @data[(y * @width) + x]
       end
 
       def set_pixel(x, y, color)
-        return if x < 0 || x >= @width || y < 0 || y >= @height
+        return if x.negative? || x >= @width || y.negative? || y >= @height
 
-        @data[y.to_i * @width + x.to_i] = color
+        @data[(y.to_i * @width) + x.to_i] = color
       end
 
       def self.from_ppm(filename)
-        content = File.read(filename, mode: "rb")
-        lines = content.lines.reject { |l| l.start_with?("#") }
+        content = File.read(filename, mode: 'rb')
+        lines = content.lines.reject { |l| l.start_with?('#') }
 
         _format = lines.shift.strip
         dimensions = lines.shift.strip.split.map(&:to_i)
@@ -62,8 +62,8 @@ module RBGL
         pixels = lines.join.split.map(&:to_i)
         (pixels.size / 3).times do |i|
           r = pixels[i * 3] / max_val.to_f
-          g = pixels[i * 3 + 1] / max_val.to_f
-          b = pixels[i * 3 + 2] / max_val.to_f
+          g = pixels[(i * 3) + 1] / max_val.to_f
+          b = pixels[(i * 3) + 2] / max_val.to_f
           data << Larb::Color.rgb(r, g, b)
         end
 
@@ -75,7 +75,7 @@ module RBGL
         height.times do |y|
           width.times do |x|
             checker = ((x / size) + (y / size)) % 2
-            data[y * width + x] = checker == 0 ? color1 : color2
+            data[(y * width) + x] = checker.zero? ? color1 : color2
           end
         end
         new(width, height, data)

@@ -39,10 +39,10 @@ module RBGL
       end
 
       def draw_arrays(mode, first, count)
-        raise "No pipeline bound" unless @pipeline
-        raise "No vertex buffer bound" unless @vertex_buffer
+        raise 'No pipeline bound' unless @pipeline
+        raise 'No vertex buffer bound' unless @vertex_buffer
 
-        vertices = (first...first + count).map { |i| process_vertex(i) }
+        vertices = (first...(first + count)).map { |i| process_vertex(i) }
 
         case mode
         when :triangles
@@ -56,7 +56,7 @@ module RBGL
         when :points
           vertices.each { |v| draw_point(v) }
         when :triangle_strip
-          (0...vertices.size - 2).each do |i|
+          (0...(vertices.size - 2)).each do |i|
             if i.even?
               draw_triangle(vertices[i], vertices[i + 1], vertices[i + 2])
             else
@@ -64,16 +64,16 @@ module RBGL
             end
           end
         when :triangle_fan
-          (1...vertices.size - 1).each do |i|
+          (1...(vertices.size - 1)).each do |i|
             draw_triangle(vertices[0], vertices[i], vertices[i + 1])
           end
         end
       end
 
       def draw_elements(mode, count, offset = 0)
-        raise "No pipeline bound" unless @pipeline
-        raise "No vertex buffer bound" unless @vertex_buffer
-        raise "No index buffer bound" unless @index_buffer
+        raise 'No pipeline bound' unless @pipeline
+        raise 'No vertex buffer bound' unless @vertex_buffer
+        raise 'No index buffer bound' unless @index_buffer
 
         indices = @index_buffer.indices[offset, count]
         vertices = indices.map { |i| process_vertex(i) }

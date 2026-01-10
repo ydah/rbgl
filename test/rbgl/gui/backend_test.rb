@@ -1,63 +1,63 @@
 # frozen_string_literal: true
 
-require_relative "../../test_helper"
+require_relative '../../test_helper'
 
 class BackendTest < Test::Unit::TestCase
-  test "initializes with width, height, and title" do
-    backend = RBGL::GUI::Backend.new(640, 480, "Test")
+  test 'initializes with width, height, and title' do
+    backend = RBGL::GUI::Backend.new(640, 480, 'Test')
     assert_equal 640, backend.width
     assert_equal 480, backend.height
-    assert_equal "Test", backend.title
+    assert_equal 'Test', backend.title
   end
 
-  test "default title is RBGL" do
+  test 'default title is RBGL' do
     backend = RBGL::GUI::Backend.new(640, 480)
-    assert_equal "RBGL", backend.title
+    assert_equal 'RBGL', backend.title
   end
 
-  test "present raises NotImplementedError" do
+  test 'present raises NotImplementedError' do
     backend = RBGL::GUI::Backend.new(640, 480)
     assert_raise(NotImplementedError) do
       backend.present(nil)
     end
   end
 
-  test "poll_events raises NotImplementedError" do
+  test 'poll_events raises NotImplementedError' do
     backend = RBGL::GUI::Backend.new(640, 480)
     assert_raise(NotImplementedError) do
       backend.poll_events
     end
   end
 
-  test "should_close? raises NotImplementedError" do
+  test 'should_close? raises NotImplementedError' do
     backend = RBGL::GUI::Backend.new(640, 480)
     assert_raise(NotImplementedError) do
       backend.should_close?
     end
   end
 
-  test "close raises NotImplementedError" do
+  test 'close raises NotImplementedError' do
     backend = RBGL::GUI::Backend.new(640, 480)
     assert_raise(NotImplementedError) do
       backend.close
     end
   end
 
-  test "on_key stores callback" do
+  test 'on_key stores callback' do
     backend = RBGL::GUI::Backend.new(640, 480)
     called = false
     backend.on_key { called = true }
     assert_false called
   end
 
-  test "on_mouse stores callback" do
+  test 'on_mouse stores callback' do
     backend = RBGL::GUI::Backend.new(640, 480)
     called = false
     backend.on_mouse { called = true }
     assert_false called
   end
 
-  test "on_resize stores callback" do
+  test 'on_resize stores callback' do
     backend = RBGL::GUI::Backend.new(640, 480)
     called = false
     backend.on_resize { called = true }
@@ -80,7 +80,7 @@ class TestableBackend < RBGL::GUI::Backend
 end
 
 class BackendCallbackTest < Test::Unit::TestCase
-  test "emit_key calls key callback" do
+  test 'emit_key calls key callback' do
     backend = TestableBackend.new(640, 480)
     received = nil
     backend.on_key { |key, action| received = [key, action] }
@@ -88,7 +88,7 @@ class BackendCallbackTest < Test::Unit::TestCase
     assert_equal [65, :press], received
   end
 
-  test "emit_mouse calls mouse callback" do
+  test 'emit_mouse calls mouse callback' do
     backend = TestableBackend.new(640, 480)
     received = nil
     backend.on_mouse { |x, y, button, action| received = [x, y, button, action] }
@@ -96,7 +96,7 @@ class BackendCallbackTest < Test::Unit::TestCase
     assert_equal [100, 200, 1, :press], received
   end
 
-  test "emit_resize calls resize callback" do
+  test 'emit_resize calls resize callback' do
     backend = TestableBackend.new(640, 480)
     received = nil
     backend.on_resize { |w, h| received = [w, h] }
@@ -104,7 +104,7 @@ class BackendCallbackTest < Test::Unit::TestCase
     assert_equal [800, 600], received
   end
 
-  test "emit_key does nothing without callback" do
+  test 'emit_key does nothing without callback' do
     backend = TestableBackend.new(640, 480)
     backend.emit_test_key(65, :press)
   end

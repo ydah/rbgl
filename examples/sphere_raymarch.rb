@@ -2,10 +2,10 @@
 
 # Raymarching Sphere - Native Shader DSL
 
-$LOAD_PATH.unshift File.expand_path("../lib", __dir__)
+$LOAD_PATH.unshift File.expand_path('../lib', __dir__)
 
-require "rbgl"
-require "rlsl"
+require 'rbgl'
+require 'rlsl'
 
 WIDTH = 640
 HEIGHT = 480
@@ -37,43 +37,43 @@ shader = RLSL.define(:raymarch) do
     oc = ro - sphere_center
     a = dot(rd, rd)
     b = 2.0 * dot(oc, rd)
-    c = dot(oc, oc) - sphere_radius * sphere_radius
-    discriminant = b * b - 4.0 * a * c
+    c = dot(oc, oc) - (sphere_radius * sphere_radius)
+    discriminant = (b * b) - (4.0 * a * c)
 
     if discriminant > 0.0
       t = (0.0 - b - sqrt(discriminant)) / (2.0 * a)
       if t > 0.0
         # Hit point
-        hit = ro + rd * t
+        hit = ro + (rd * t)
 
         # Normal at hit point
         normal = normalize(hit - sphere_center)
 
         # Light direction (animated)
         light_dir = normalize(vec3(
-          sin(u.time * 0.5),
-          1.0,
-          cos(u.time * 0.3)
-        ))
+                                sin(u.time * 0.5),
+                                1.0,
+                                cos(u.time * 0.3)
+                              ))
 
         # Diffuse lighting
         diff = clamp(dot(normal, light_dir), 0.0, 1.0)
 
         # Specular
         view_dir = rd * -1.0
-        reflect_dir = normal * 2.0 * dot(normal, light_dir) - light_dir
+        reflect_dir = (normal * 2.0 * dot(normal, light_dir)) - light_dir
         spec = pow(clamp(dot(view_dir, reflect_dir), 0.0, 1.0), 32.0)
 
         # Base color (hue shifts with time)
         base_color = vec3(
-          0.5 + 0.5 * sin(u.time),
-          0.5 + 0.5 * sin(u.time + 2.0),
-          0.5 + 0.5 * sin(u.time + 4.0)
+          0.5 + (0.5 * sin(u.time)),
+          0.5 + (0.5 * sin(u.time + 2.0)),
+          0.5 + (0.5 * sin(u.time + 4.0))
         )
 
         # Combine
         ambient = 0.1
-        base_color * (ambient + diff * 0.7) + vec3(spec * 0.5, spec * 0.5, spec * 0.5)
+        (base_color * (ambient + (diff * 0.7))) + vec3(spec * 0.5, spec * 0.5, spec * 0.5)
       else
         # Behind camera
         vec3(0.05, 0.05, 0.1)
@@ -87,9 +87,9 @@ shader = RLSL.define(:raymarch) do
 end
 
 # Initialize display
-window = RBGL::GUI::Window.new(width: WIDTH, height: HEIGHT, title: "Raymarched Sphere")
+window = RBGL::GUI::Window.new(width: WIDTH, height: HEIGHT, title: 'Raymarched Sphere')
 
-puts "Raymarching Sphere - Native Shader DSL"
+puts 'Raymarching Sphere - Native Shader DSL'
 puts "Press 'q' or Escape to quit"
 
 start_time = Time.now
@@ -108,19 +108,17 @@ while running && !window.should_close?
 
   events = window.poll_events_raw
   events.each do |e|
-    if e[:type] == :key_press && (e[:key] == 12 || e[:key] == "q")
-      running = false
-    end
+    running = false if e[:type] == :key_press && [12, 'q'].include?(e[:key])
   end
 
   frame_count += 1
   now = Time.now
-  if now - last_fps_time >= 1.0
-    fps = frame_count / (now - last_fps_time)
-    puts "FPS: #{fps.round(1)}"
-    frame_count = 0
-    last_fps_time = now
-  end
+  next unless now - last_fps_time >= 1.0
+
+  fps = frame_count / (now - last_fps_time)
+  puts "FPS: #{fps.round(1)}"
+  frame_count = 0
+  last_fps_time = now
 end
 
 window.close
